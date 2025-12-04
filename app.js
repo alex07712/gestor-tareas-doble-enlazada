@@ -5,7 +5,7 @@ let headId = null;
 let tailId = null;
 
 class Nodo {
-    constructor(id, titulo) {
+    constructor(id, titulo, estatus = "pendiente") {
         this.id = id;
         this.titulo = titulo;
         this.estatus = estatus;
@@ -83,7 +83,7 @@ const btnAgregarFinal = document.getElementById("btnAgregarFinal");
 async function cargarLista() {
     const { data, error } = await supabase
         .from("tasks")
-        .select("id, titulo, id_anterior, id_siguiente");
+        .select("id, titulo, estatus, id_anterior, id_siguiente");
 
     if (error) {
         console.error("Error al cargar tareas:", error);
@@ -142,7 +142,10 @@ async function insertarAlInicio(titulo) {
     if (headId === null) {
         const { data, error } = await supabase
             .from("tasks")
-            .insert({ titulo })
+            .insert({
+                titulo,
+                estatus: "pendiente", // ✅ valor por defecto
+            })
             .select()
             .single();
 
@@ -187,7 +190,10 @@ async function insertarAlFinal(titulo) {
     if (tailId === null) {
         const { data, error } = await supabase
             .from("tasks")
-            .insert({ titulo })
+            .insert({
+                titulo,
+                estatus: "pendiente", // ✅ valor por defecto
+            })
             .select()
             .single();
 
@@ -329,6 +335,7 @@ btnAgregarFinal.onclick = () => {
 };
 
 cargarLista();
+
 
 
 
