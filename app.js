@@ -115,7 +115,7 @@ async function showMessage(msg, isError = false) {
 }
 
 async function checkUser() {
-    const {  { user } } = await supabase.auth.getUser();
+    const { data: { user } } = await supabase.auth.getUser();
     if (user) {
         userId = user.id;
         document.getElementById("authForm").style.display = "none";
@@ -461,3 +461,4 @@ checkUser();
 supabase.auth.onAuthStateChange((event, session) => {
     checkUser();
 });
+
