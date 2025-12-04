@@ -13,19 +13,28 @@ const btnAgregarFinal = document.getElementById("btnAgregarFinal");
 
 // --- Auth UI ---
 const authContainer = document.createElement("div");
+authContainer.id = "authContainer";
 authContainer.innerHTML = `
-    <div id="authStatus" style="text-align: center; margin: 10px 0;">
-        <button id="btnLogin">Iniciar sesión</button>
-        <button id="btnLogout" style="display:none;">Cerrar sesión</button>
+    <div id="authForm" style="max-width: 400px; margin: 20px auto; padding: 20px; background: #fff; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+        <h3 style="text-align: center;">🔐 Iniciar sesión / Registrarse</h3>
+        <input type="email" id="email" placeholder="Email" style="width:100%; padding:10px; margin:8px 0; border:1px solid #ddd; border-radius:4px;">
+        <input type="password" id="password" placeholder="Contraseña (mín. 6 caracteres)" style="width:100%; padding:10px; margin:8px 0; border:1px solid #ddd; border-radius:4px;">
+        <button id="btnSignIn" style="width:100%; padding:10px; margin:8px 0; background:#4CAF50; color:white; border:none; border-radius:4px; cursor:pointer;">Iniciar sesión</button>
+        <button id="btnSignUp" style="width:100%; padding:10px; margin:8px 0; background:#2196F3; color:white; border:none; border-radius:4px; cursor:pointer;">Registrarse</button>
+        <button id="btnLogout" style="width:100%; padding:10px; margin:8px 0; background:#f44336; color:white; border:none; border-radius:4px; cursor:pointer; display:none;">Cerrar sesión</button>
+        <p id="authMessage" style="margin-top:10px; text-align:center; min-height:20px;"></p>
     </div>
 `;
 document.body.insertBefore(authContainer, document.querySelector("h1").nextElementSibling);
 
-const btnLogin = document.getElementById("btnLogin");
+const emailInput = document.getElementById("email");
+const passwordInput = document.getElementById("password");
+const btnSignIn = document.getElementById("btnSignIn");
+const btnSignUp = document.getElementById("btnSignUp");
 const btnLogout = document.getElementById("btnLogout");
-const authStatus = document.getElementById("authStatus");
+const authMessage = document.getElementById("authMessage");
 
-// --- Clases (igual que antes) ---
+// --- Clases ---
 class Nodo {
     constructor(id, titulo, estatus = "pendiente") {
         this.id = id;
@@ -100,19 +109,24 @@ class ListaDobleEnMemoria {
 const listaEnMemoria = new ListaDobleEnMemoria();
 
 // --- Auth Functions ---
+async function showMessage(msg, isError = false) {
+    authMessage.textContent = msg;
+    authMessage.style.color = isError ? "red" : "green";
+}
+
 async function checkUser() {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {  { user } } = await supabase.auth.getUser();
     if (user) {
         userId = user.id;
-        btnLogin.style.display = "none";
-        btnLogout.style.display = "inline-block";
-        authStatus.innerHTML = `<p>👤 Sesión iniciada: ${user.email}</p>`;
+        document.getElementById("authForm").style.display = "none";
+        btnLogout.style.display = "block";
+        authMessage.textContent = `👤 Sesión iniciada: ${user.email}`;
         cargarLista();
     } else {
         userId = null;
-        btnLogin.style.display = "inline-block";
+        document.getElementById("authForm").style.display = "block";
         btnLogout.style.display = "none";
-        authStatus.innerHTML = "<p>🔒 Inicia sesión para gestionar tus tareas</p>";
+        authMessage.textContent = "";
         listaEnMemoria.head = null;
         listaEnMemoria.tail = null;
         listaEnMemoria.nodos.clear();
@@ -120,14 +134,43 @@ async function checkUser() {
     }
 }
 
-btnLogin.onclick = () => {
-    // Abre el popup de login de Supabase
-    supabase.auth.signInWithOAuth({
-        provider: 'github', // o 'google', o usa email con UI personalizada
+btnSignUp.onclick = async () => {
+    const email = emailInput.value.trim();
+    const password = passwordInput.value;
+    if (!email || !password) return showMessage("Completa todos los campos", true);
+    if (password.length < 6) return showMessage("La contraseña debe tener al menos 6 caracteres", true);
+
+    const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
         options: {
-            redirectTo: window.location.origin // vuelve a tu app
+            emailRedirectTo: window.location.origin
         }
     });
+
+    if (error) {
+        showMessage(error.message, true);
+    } else if (data.user) {
+        showMessage("¡Registro exitoso! Revisa tu email para confirmar tu cuenta.", false);
+    }
+};
+
+btnSignIn.onclick = async () => {
+    const email = emailInput.value.trim();
+    const password = passwordInput.value;
+    if (!email || !password) return showMessage("Completa todos los campos", true);
+
+    const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+    });
+
+    if (error) {
+        showMessage(error.message, true);
+    } else if (data.user) {
+        showMessage("Inicio de sesión exitoso", false);
+        checkUser();
+    }
 };
 
 btnLogout.onclick = async () => {
@@ -142,7 +185,7 @@ async function cargarLista() {
     const { data, error } = await supabase
         .from("tasks")
         .select("id, titulo, estatus, id_anterior, id_siguiente")
-        .eq("user_id", userId); // 🔑 Filtrar por usuario
+        .eq("user_id", userId);
 
     if (error) {
         console.error("Error al cargar tareas:", error);
@@ -192,9 +235,9 @@ async function cargarLista() {
     actualizarLista();
 }
 
-// --- Insertar tareas con user_id ---
+// --- Insertar al inicio ---
 async function insertarAlInicio(titulo) {
-    if (!userId) { alert("Inicia sesión primero"); return; }
+    if (!userId) { showMessage("Inicia sesión primero", true); return; }
     let nuevaTarea;
 
     if (headId === null) {
@@ -203,12 +246,12 @@ async function insertarAlInicio(titulo) {
             .insert({ 
                 titulo,
                 estatus: "pendiente",
-                user_id: userId  // 🔑 Asignar al usuario
+                user_id: userId
             })
             .select()
             .single();
 
-        if (error) { console.error(error); return; }
+        if (error) { console.error(error); showMessage("Error al guardar", true); return; }
         nuevaTarea = data;
         headId = nuevaTarea.id;
         tailId = nuevaTarea.id;
@@ -218,14 +261,14 @@ async function insertarAlInicio(titulo) {
             .insert({
                 titulo,
                 estatus: "pendiente",
-                user_id: userId,  // 🔑
+                user_id: userId,
                 id_siguiente: headId,
                 id_anterior: null
             })
             .select()
             .single();
 
-        if (error) { console.error(error); return; }
+        if (error) { console.error(error); showMessage("Error al guardar", true); return; }
         nuevaTarea = data;
 
         const { error: updateError } = await supabase
@@ -233,7 +276,7 @@ async function insertarAlInicio(titulo) {
             .update({ id_anterior: nuevaTarea.id })
             .eq("id", headId);
 
-        if (updateError) { console.error(updateError); return; }
+        if (updateError) { console.error(updateError); showMessage("Error al enlazar", true); return; }
 
         headId = nuevaTarea.id;
     }
@@ -242,8 +285,9 @@ async function insertarAlInicio(titulo) {
     actualizarLista();
 }
 
+// --- Insertar al final ---
 async function insertarAlFinal(titulo) {
-    if (!userId) { alert("Inicia sesión primero"); return; }
+    if (!userId) { showMessage("Inicia sesión primero", true); return; }
     let nuevaTarea;
 
     if (tailId === null) {
@@ -252,12 +296,12 @@ async function insertarAlFinal(titulo) {
             .insert({ 
                 titulo,
                 estatus: "pendiente",
-                user_id: userId  // 🔑
+                user_id: userId
             })
             .select()
             .single();
 
-        if (error) { console.error(error); return; }
+        if (error) { console.error(error); showMessage("Error al guardar", true); return; }
         nuevaTarea = data;
         headId = nuevaTarea.id;
         tailId = nuevaTarea.id;
@@ -267,14 +311,14 @@ async function insertarAlFinal(titulo) {
             .insert({
                 titulo,
                 estatus: "pendiente",
-                user_id: userId,  // 🔑
+                user_id: userId,
                 id_anterior: tailId,
                 id_siguiente: null
             })
             .select()
             .single();
 
-        if (error) { console.error(error); return; }
+        if (error) { console.error(error); showMessage("Error al guardar", true); return; }
         nuevaTarea = data;
 
         const { error: updateError } = await supabase
@@ -282,7 +326,7 @@ async function insertarAlFinal(titulo) {
             .update({ id_siguiente: nuevaTarea.id })
             .eq("id", tailId);
 
-        if (updateError) { console.error(updateError); return; }
+        if (updateError) { console.error(updateError); showMessage("Error al enlazar", true); return; }
 
         tailId = nuevaTarea.id;
     }
@@ -332,15 +376,23 @@ async function eliminarTarea(id) {
 function actualizarLista() {
     listaTareas.innerHTML = "";
     if (!userId) {
-        listaTareas.innerHTML = "<li>🔒 Inicia sesión para ver tus tareas</li>";
+        listaTareas.innerHTML = "<li style='text-align:center; color:#888;'>🔒 Inicia sesión para ver y gestionar tus tareas</li>";
         return;
     }
 
     listaEnMemoria.toArray().forEach(t => {
         const li = document.createElement("li");
-        
+        li.style.display = "flex";
+        li.style.justifyContent = "space-between";
+        li.style.alignItems = "center";
+        li.style.padding = "10px";
+        li.style.background = "#f9f9f9";
+        li.style.borderRadius = "4px";
+        li.style.marginBottom = "8px";
+
         const spanTitulo = document.createElement("span");
         spanTitulo.textContent = t.titulo;
+        spanTitulo.style.flex = "1";
         spanTitulo.style.marginRight = "10px";
         li.appendChild(spanTitulo);
 
@@ -363,21 +415,23 @@ function actualizarLista() {
                     .from("tasks")
                     .update({ estatus: nuevoEstatus })
                     .eq("id", t.id)
-                    .eq("user_id", userId); // 🔒 seguridad extra
+                    .eq("user_id", userId);
                 if (error) throw error;
                 const nodo = listaEnMemoria.nodos.get(t.id);
                 if (nodo) nodo.estatus = nuevoEstatus;
             } catch (err) {
                 console.error("Error:", err);
-                alert("No se pudo actualizar");
+                showMessage("No se pudo actualizar el estado", true);
             }
         };
 
         li.appendChild(selectEstatus);
 
         const btnEliminar = document.createElement("span");
-        btnEliminar.textContent = "❌";
-        btnEliminar.classList.add("eliminar");
+        btnEliminar.textContent = " ❌";
+        btnEliminar.style.color = "red";
+        btnEliminar.style.cursor = "pointer";
+        btnEliminar.style.marginLeft = "10px";
         btnEliminar.onclick = () => eliminarTarea(t.id);
         li.appendChild(btnEliminar);
 
@@ -403,7 +457,7 @@ btnAgregarFinal.onclick = () => {
 // --- Iniciar ---
 checkUser();
 
-// Escuchar cambios de sesión (ej: al volver de login)
+// Escuchar cambios de sesión
 supabase.auth.onAuthStateChange((event, session) => {
     checkUser();
 });
