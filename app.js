@@ -8,6 +8,7 @@ class Nodo {
     constructor(id, titulo) {
         this.id = id;
         this.titulo = titulo;
+        this.estatus = estatus;
         this.next = null;
         this.prev = null;
     }
@@ -328,5 +329,6 @@ btnAgregarFinal.onclick = () => {
 };
 
 cargarLista();
+
 
 
