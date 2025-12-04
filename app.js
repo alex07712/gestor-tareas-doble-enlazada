@@ -263,14 +263,52 @@ function actualizarLista() {
     listaTareas.innerHTML = "";
     listaEnMemoria.toArray().forEach(t => {
         const li = document.createElement("li");
-        li.textContent = t.titulo;
+        
+        // Mostrar título de la tarea
+        const spanTitulo = document.createElement("span");
+        spanTitulo.textContent = t.titulo;
+        spanTitulo.style.marginRight = "10px";
+        li.appendChild(spanTitulo);
 
+        // Select para cambiar estado
+        const selectEstatus = document.createElement("select");
+        ["pendiente", "en_progreso", "terminada"].forEach(estado => {
+            const option = document.createElement("option");
+            option.value = estado;
+            option.textContent = 
+                estado === "pendiente" ? "⏳ Pendiente" :
+                estado === "en_progreso" ? "🔄 En progreso" :
+                "✅ Terminada";
+            if (t.estatus === estado) option.selected = true;
+            selectEstatus.appendChild(option);
+        });
+
+        selectEstatus.onchange = async () => {
+            const nuevoEstatus = selectEstatus.value;
+            try {
+                const { error } = await supabase
+                    .from("tasks")
+                    .update({ estatus: nuevoEstatus })
+                    .eq("id", t.id);
+                if (error) throw error;
+                // Actualizar en memoria
+                const nodo = listaEnMemoria.nodos.get(t.id);
+                if (nodo) nodo.estatus = nuevoEstatus;
+            } catch (err) {
+                console.error("Error al actualizar estado:", err);
+                alert("No se pudo actualizar el estado");
+            }
+        };
+
+        li.appendChild(selectEstatus);
+
+        // Botón eliminar
         const btnEliminar = document.createElement("span");
         btnEliminar.textContent = "❌";
         btnEliminar.classList.add("eliminar");
         btnEliminar.onclick = () => eliminarTarea(t.id);
-
         li.appendChild(btnEliminar);
+
         listaTareas.appendChild(li);
     });
 }
@@ -290,4 +328,5 @@ btnAgregarFinal.onclick = () => {
 };
 
 cargarLista();
+
 
