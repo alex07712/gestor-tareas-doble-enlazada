@@ -1,54 +1,274 @@
+/* ===== VARIABLES DE COLOR ===== */
+:root {
+  --primary: #4361ee;
+  --primary-light: #4895ef;
+  --success: #4CAF50;
+  --danger: #f44336;
+  --warning: #ff9800;
+  --light: #f8f9fa;
+  --dark: #212529;
+  --gray: #6c757d;
+  --border: #e9ecef;
+  --card-bg: #ffffff;
+  --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* ===== RESET Y CONFIGURACIÓN GLOBAL ===== */
+* {
+  box-sizing: border-box;
+}
+
 body {
-    font-family: Arial, sans-serif;
-    background: #f3f3f3;
-    padding: 20px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #f5f7fa 0%, #e4edf9 100%);
+  color: var(--dark);
+  padding: 20px;
+  margin: 0;
+  min-height: 100vh;
 }
 
+/* ===== TÍTULOS ===== */
 h1 {
-    text-align: center;
+  text-align: center;
+  margin: 20px 0 30px;
+  color: var(--primary);
+  font-weight: 700;
+  font-size: 2.2rem;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.1);
 }
 
+h2 {
+  text-align: center;
+  margin: 25px 0 15px;
+  color: var(--primary-light);
+  font-weight: 600;
+}
+
+/* ===== CONTENEDOR PRINCIPAL ===== */
 .container {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    margin-bottom: 20px;
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 25px;
+  flex-wrap: wrap;
 }
 
-input {
-    padding: 10px;
-    font-size: 16px;
-    width: 250px;
+/* ===== INPUTS ===== */
+input[type="text"],
+input[type="email"],
+input[type="password"] {
+  padding: 12px 16px;
+  font-size: 16px;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  width: 280px;
+  max-width: 100%;
+  outline: none;
 }
 
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+}
+
+/* ===== BOTONES ===== */
 button {
-    padding: 10px 15px;
-    cursor: pointer;
-    background: #4CAF50;
-    color: white;
-    border: none;
-    border-radius: 4px;
+  padding: 12px 20px;
+  cursor: pointer;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  font-size: 16px;
+  min-width: 140px;
 }
 
-button:hover {
-    background: #45a049;
+/* Botones principales (agregar tarea) */
+#btnAgregarInicio,
+#btnAgregarFinal {
+  background: var(--primary);
+  color: white;
 }
 
+#btnAgregarInicio:hover,
+#btnAgregarFinal:hover {
+  background: var(--primary-light);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
+}
+
+/* Botones de auth */
+.auth-btn {
+  color: white;
+  font-weight: 600;
+}
+
+.auth-btn-signin {
+  background: var(--success);
+}
+.auth-btn-signin:hover {
+  background: #45a049;
+  transform: translateY(-2px);
+}
+
+.auth-btn-signup {
+  background: var(--primary);
+}
+.auth-btn-signup:hover {
+  background: var(--primary-light);
+  transform: translateY(-2px);
+}
+
+.auth-btn-logout {
+  background: var(--danger);
+}
+.auth-btn-logout:hover {
+  background: #d32f2f;
+  transform: translateY(-2px);
+}
+
+button:active {
+  transform: translateY(0);
+}
+
+/* ===== LISTA DE TAREAS ===== */
 #listaTareas {
-    list-style: none;
-    padding: 0;
+  list-style: none;
+  padding: 0;
+  max-width: 600px;
+  margin: 0 auto;
 }
 
 #listaTareas li {
-    background: white;
-    padding: 10px;
-    margin: 5px 0;
-    border-radius: 6px;
-    display: flex;
-    justify-content: space-between;
+  background: var(--card-bg);
+  padding: 16px;
+  margin: 12px 0;
+  border-radius: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: var(--shadow);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border: 1px solid var(--border);
 }
 
-.eliminar {
-    color: red;
-    cursor: pointer;
+#listaTareas li:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
 }
+
+/* Estilos para el select de estado */
+#listaTareas select {
+  padding: 8px 12px;
+  border: 2px solid var(--border);
+  border-radius: 6px;
+  background: white;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.2s;
+  margin: 0 12px;
+  min-width: 140px;
+}
+
+#listaTareas select:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+#listaTareas select option {
+  padding: 8px;
+}
+
+/* Botón eliminar */
+.eliminar {
+  color: var(--danger);
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 18px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s;
+  background: rgba(244, 67, 54, 0.1);
+}
+
+.eliminar:hover {
+  background: rgba(244, 67, 54, 0.2);
+  transform: scale(1.1);
+}
+
+/* ===== FORMULARIO DE AUTENTICACIÓN ===== */
+#authForm {
+  max-width: 420px;
+  margin: 20px auto;
+  padding: 28px;
+  background: var(--card-bg);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+}
+
+.auth-title {
+  margin: 0 0 20px;
+  color: var(--primary);
+  font-size: 1.5rem;
+  text-align: center;
+}
+
+.auth-message {
+  margin-top: 15px;
+  min-height: 22px;
+  font-weight: 500;
+  text-align: center;
+  padding: 8px;
+  border-radius: 6px;
+}
+
+/* ===== MENSAJES DE ERROR/ÉXITO ===== */
+#authMessage {
+  margin-top: 15px;
+  min-height: 22px;
+  text-align: center;
+  font-weight: 500;
+  padding: 8px;
+  border-radius: 6px;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 600px) {
+  .container {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  input[type="text"] {
+    width: 100%;
+    max-width: 280px;
+  }
+  
+  button {
+    width: 100%;
+    max-width: 280px;
+    margin: 4px 0;
+  }
+  
+  #listaTareas li {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  #authForm {
+    margin: 15px;
+    padding: 20px;
+  }
+}
+
+/* ===== ESTADO DE TAREAS POR COLOR ===== */
+/* Puedes personalizar colores según el estado si lo deseas */
